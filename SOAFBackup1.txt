@@ -1,0 +1,353 @@
+
+
+
+
+# Loop Through Windows Directory
+
+loop_directory_windows() {
+
+IFS='
+'
+set -f
+
+
+for i in $@; do
+
+	# Loop through Firefox directory for output.
+	for path in $( find $i/Users -print | grep -i '/*[.]default$' | grep -i '/Roaming/' ); do
+
+
+		user=$(echo $path | rev | cut -d '/' -f7 | rev)
+		
+
+		cd "$path"
+		sqlite3 -separator '^' places.sqlite "SELECT id, url, title, visit_count,datetime(last_visit_date/1000000,'unixepoch','localtime') AS last_visit_date FROM moz_places;" > /home/$USER/Desktop/SOAF/windowsFirefox.txt
+
+
+		cd "$path"
+		sqlite3 -separator '^' places.sqlite "SELECT id, keyword FROM moz_keywords;" > /home/$USER/Desktop/SOAF/windowsFirefoxKey.txt
+
+		# Input browser and user into output file.
+		sed -i "s/$/^Windows/" /home/$USER/Desktop/SOAF/windowsFirefox.txt
+		sed -i "s/$/^Firefox/" /home/$USER/Desktop/SOAF/windowsFirefox.txt
+		sed -i  "s/$/^$user/" /home/$USER/Desktop/SOAF/windowsFirefox.txt
+		sed -i "s/$/^Windows/" /home/$USER/Desktop/SOAF/windowsFirefoxKey.txt
+		sed -i "s/$/^Firefox/" /home/$USER/Desktop/SOAF/windowsFirefoxKey.txt
+		sed -i "s/$/^$user/" /home/$USER/Desktop/SOAF/windowsFirefoxKey.txt
+
+		
+		# Import output file to SOAF database.
+		cd /home/$USER/Desktop/SOAF
+
+		echo -e ".separator "^"\n.import /home/$USER/Desktop/SOAF/windowsFirefox.txt browser_history" | sqlite3 soaf.db
+		echo -e ".separator "^"\n.import /home/$USER/Desktop/SOAF/windowsFirefoxKey.txt keyword_search" | sqlite3 soaf.db
+
+		rm -r /home/$USER/Desktop/SOAF/windowsFirefox.txt
+		rm -r /home/$USER/Desktop/SOAF/windowsFirefoxKey.txt
+	
+	done;
+	
+
+	# Loop through Google directory for output.
+	for path in $( find $i/Users -type d | grep -i './User\ Data/Default$' ); do
+
+		
+		user=$(echo $path | rev | cut -d '/' -f7 | rev)
+
+		
+		cd "$path"
+		sqlite3 -separator '^' History "SELECT id, url, title, visit_count,datetime(last_visit_time/1000000-11644473600,'unixepoch','localtime') AS last_visit_time FROM urls;" > /home/$USER/Desktop/SOAF/windowsGoogle.txt
+
+		
+		cd "$path"
+		sqlite3 -separator '^' History "SELECT url_id, term FROM keyword_search_terms;" > /home/$USER/Desktop/SOAF/windowsGoogleKey.txt
+
+		sed -i "s/$/^Windows/" /home/$USER/Desktop/SOAF/windowsGoogle.txt		
+		sed -i "s/$/^Chrome/" /home/$USER/Desktop/SOAF/windowsGoogle.txt
+		sed -i  "s/$/^$user/" /home/$USER/Desktop/SOAF/windowsGoogle.txt
+		sed -i "s/$/^Windows/" /home/$USER/Desktop/SOAF/windowsGoogleKey.txt		
+		sed -i "s/$/^Chrome/" /home/$USER/Desktop/SOAF/windowsGoogleKey.txt
+		sed -i "s/$/^$user/" /home/$USER/Desktop/SOAF/windowsGoogleKey.txt
+
+
+		cd /home/$USER/Desktop/SOAF/
+		echo -e ".separator "^"\n.import /home/$USER/Desktop/SOAF/windowsGoogle.txt browser_history" | sqlite3 soaf.db
+		echo -e ".separator "^"\n.import /home/$USER/Desktop/SOAF/windowsGoogleKey.txt keyword_search" | sqlite3 soaf.db
+		rm -r /home/$USER/Desktop/SOAF/windowsGoogle.txt
+		rm -r /home/$USER/Desktop/SOAF/windowsGoogleKey.txt
+
+	done;
+ 	
+	
+	# Look through Opera directory for output.
+	for path in $( find $i/Users -print | grep -i './Opera\ Stable$' | grep -i '/Roaming/' ); do
+
+
+		user=$(echo $path | rev | cut -d '/' -f5 | rev)
+
+
+		cd "$path"
+		sqlite3 -separator '^' History "SELECT id, url, title, visit_count,datetime(last_visit_time/1000000-11644473600,'unixepoch','localtime') AS last_visit_time FROM urls;" > /home/$USER/Desktop/SOAF/windowsOpera.txt
+		
+		
+		cd "$path"
+		sqlite3 -separator '^' History "SELECT url_id, term FROM keyword_search_terms;" > /home/$USER/Desktop/SOAF/windowsOperaKey.txt
+
+		sed -i "s/$/^Windows/" /home/$USER/Desktop/SOAF/windowsOpera.txt
+		sed -i "s/$/^Opera/" /home/$USER/Desktop/SOAF/windowsOpera.txt
+		sed -i  "s/$/^$user/" /home/$USER/Desktop/SOAF/windowsOpera.txt
+		sed -i "s/$/^Windows/" /home/$USER/Desktop/SOAF/windowsOperaKey.txt		
+		sed -i "s/$/^Opera/" /home/$USER/Desktop/SOAF/windowsOperaKey.txt
+		sed -i "s/$/^$user/" /home/$USER/Desktop/SOAF/windowsOperaKey.txt
+
+
+		cd /home/$USER/Desktop/SOAF/
+		echo -e ".separator "^"\n.import /home/$USER/Desktop/SOAF/windowsOpera.txt browser_history" | sqlite3 soaf.db
+		echo -e ".separator "^"\n.import /home/$USER/Desktop/SOAF/windowsOperaKey.txt keyword_search" | sqlite3 soaf.db
+		rm -r /home/$USER/Desktop/SOAF/windowsOpera.txt
+		rm -r /home/$USER/Desktop/SOAF/windowsOperaKey.txt
+
+	done;
+
+	
+done;
+
+}
+
+#loop_directory_windows $@
+
+
+
+
+# Loop Through Linux Directory
+
+loop_directory_linux() {
+
+for i in $@; do
+	
+
+	# Loop through Firefox directory for output.
+	for path in $( find $i/home/*/.mozilla -print | grep -i './*[.]default$' ); do
+
+
+		user=$(echo $path | rev | cut -d '/' -f4 | rev)
+
+
+		cd "$path"
+		sqlite3 -separator '^' places.sqlite "SELECT id, url, title, visit_count, datetime(last_visit_date/1000000, 'unixepoch','localtime') AS last_visit_time FROM moz_places;" > /home/$USER/Desktop/SOAF/linuxFirefox.txt
+
+
+		cd "$path"
+		sqlite3 -separator '^' places.sqlite "SELECT id, keyword FROM moz_keywords;" > /home/$USER/Desktop/SOAF/linuxFirefoxKey.txt
+
+		# Input browser and user into output file.
+		sed -i "s/$/^Linux/" /home/$USER/Desktop/SOAF/linuxFirefox.txt		
+		sed -i "s/$/^Firefox/" /home/$USER/Desktop/SOAF/linuxFirefox.txt
+		sed -i  "s/$/^$user/" /home/$USER/Desktop/SOAF/linuxFirefox.txt
+		sed -i "s/$/^Linux/" /home/$USER/Desktop/SOAF/linuxFirefoxKey.txt		
+		sed -i "s/$/^Firefox/" /home/$USER/Desktop/SOAF/linuxFirefoxKey.txt
+		sed -i "s/$/^$user/" /home/$USER/Desktop/SOAF/linuxFirefoxKey.txt
+
+		
+		# Import output file to SOAF database.
+		cd /home/$USER/Desktop/SOAF/
+
+		echo -e ".separator "^"\n.import /home/$USER/Desktop/SOAF/linuxFirefox.txt browser_history" | sqlite3 soaf.db
+		echo -e ".separator "^"\n.import /home/$USER/Desktop/SOAF/linuxFirefoxKey.txt keyword_search" | sqlite3 soaf.db
+	
+		rm -r /home/$USER/Desktop/SOAF/linuxFirefox.txt
+		rm -r /home/$USER/Desktop/SOAF/linuxFirefoxKey.txt
+
+	done;
+
+
+	# Loop through Google Chrome directory for output.
+	for path in $( find $i/home/*/.config -print | grep -i './google-chrome/Default$' ); do
+
+		
+		user=$(echo $path | rev | cut -d '/' -f4 | rev)
+
+
+		cd "$path"
+		sqlite3 -separator '^' History "SELECT id, url, title, visit_count,datetime(last_visit_time/1000000-11644473600,'unixepoch','localtime') AS last_visit_time FROM urls;" > /home/$USER/Desktop/SOAF/linuxGoogle.txt
+		
+
+				
+		cd "$path"
+		sqlite3 -separator '^' History "SELECT url_id, term FROM keyword_search_terms;" > /home/$USER/Desktop/SOAF/linuxGoogleKey.txt
+
+		
+		
+		sed -i "s/$/^Linux/" /home/$USER/Desktop/SOAF/linuxGoogle.txt
+		sed -i "s/$/^Chrome/" /home/$USER/Desktop/SOAF/linuxGoogle.txt	
+		sed -i "s/$/^$user/" /home/$USER/Desktop/SOAF/linuxGoogle.txt
+		sed -i "s/$/^Linux/" /home/$USER/Desktop/SOAF/linuxGoogleKey.txt
+		sed -i "s/$/^Chrome/" /home/$USER/Desktop/SOAF/linuxGoogleKey.txt
+		sed -i "s/$/^$user/" /home/$USER/Desktop/SOAF/linuxGoogleKey.txt
+
+
+		cd /home/$USER/Desktop/SOAF/
+
+		echo -e ".separator "^"\n.import /home/$USER/Desktop/SOAF/linuxGoogle.txt browser_history" | sqlite3 soaf.db
+		echo -e ".separator "^"\n.import /home/$USER/Desktop/SOAF/linuxGoogleKey.txt keyword_search" | sqlite3 soaf.db
+		
+		
+		rm -r /home/$USER/Desktop/SOAF/linuxGoogle.txt
+		rm -r /home/$USER/Desktop/SOAF/linuxGoogleKey.txt
+	
+	done;
+
+
+	# Loop through Opera directory for output.
+	for path in $( find $i/home/*/.config -print | grep -i './opera$' ); do
+
+		user=$(echo $path | rev | cut -d '/' -f3 | rev)
+
+
+		cd "$path"
+		sqlite3 -separator '^' History "SELECT id, url, title, visit_count,datetime(last_visit_time/1000000-11644473600,'unixepoch','localtime') AS last_visit_time FROM urls;" > /home/$USER/Desktop/SOAF/linuxOpera.txt
+		
+
+		cd "$path"
+		sqlite3 -separator '^' History "SELECT url_id, term FROM keyword_search_terms;" > /home/$USER/Desktop/SOAF/linuxOperaKey.txt
+
+		sed -i "s/$/^Linux/" /home/$USER/Desktop/SOAF/linuxOpera.txt
+		sed -i "s/$/^Opera/" /home/$USER/Desktop/SOAF/linuxOpera.txt
+		sed -i "s/$/^$user/" /home/$USER/Desktop/SOAF/linuxOpera.txt
+		sed -i "s/$/^Linux/" /home/$USER/Desktop/SOAF/linuxOperaKey.txt
+		sed -i "s/$/^Opera/" /home/$USER/Desktop/SOAF/linuxOperaKey.txt
+		sed -i "s/$/^$user/" /home/$USER/Desktop/SOAF/linuxOperaKey.txt
+		
+
+		cd /home/$USER/Desktop/SOAF/
+		echo -e ".separator "^"\n.import /home/$USER/Desktop/SOAF/linuxOpera.txt browser_history" | sqlite3 soaf.db
+		echo -e ".separator "^"\n.import /home/$USER/Desktop/SOAF/linuxOperaKey.txt keyword_search" | sqlite3 soaf.db
+		
+
+		rm -r /home/$USER/Desktop/SOAF/linuxOpera.txt
+		rm -r /home/$USER/Desktop/SOAF/linuxOperaKey.txt
+		
+	done;
+
+done;
+
+}
+
+#loop_directory_linux $@
+
+
+
+# Create Database
+
+create_table() {
+
+rm -rf /home/$USER/Desktop/SOAF/
+mkdir /home/$USER/Desktop/SOAF/
+cd /home/$USER/Desktop/SOAF
+
+
+
+sqlite3 soaf.db "CREATE TABLE keyword_search (
+	url_id INTEGER NOT NULL,
+	search_term TEXT, operating_system TEXT, browser TEXT, user TEXT);"
+
+	 
+sqlite3 soaf.db "CREATE TABLE browser_history (
+	url_id INTEGER NOT NULL, 
+	url TEXT, title TEXT, visit_count INTEGER, 
+	last_visit INTEGER, operating_system TEXT, web_browser TEXT, 
+	user TEXT);"
+
+
+}
+
+#create_table
+
+
+
+#Determine if Linux or Windows Directory
+
+directory_exist() {
+
+
+if [ -d "$@/home" ]; then
+
+
+	loop_directory_linux $@
+	
+	cd /home/$USER/Desktop/SOAF
+	rm -rf /home/$USER/Desktop/SOAF/SOAF_Report.txt
+
+	
+	sqlite3 -column -header soaf.db "SELECT * FROM browser_history;" >> /home/$USER/Desktop/SOAF/SOAF_Report.txt
+	echo " " >> /home/$USER/Desktop/SOAF/SOAF_Report.txt
+	echo " " >> /home/$USER/Desktop/SOAF/SOAF_Report.txt
+	sqlite3 -column -header soaf.db "SELECT * FROM keyword_search;" >> /home/$USER/Desktop/SOAF/SOAF_Report.txt
+ 
+ 
+elif [ -d "$@/Users" ]; then
+
+
+	loop_directory_windows $@
+
+	cd /home/$USER/Desktop/SOAF
+	rm -rf /home/$USER/Desktop/SOAF/SOAF_Report.txt
+
+	sqlite3 -column -header soaf.db "SELECT * FROM browser_history;" >> /home/$USER/Desktop/SOAF/SOAF_Report.txt
+	echo " " >> /home/$USER/Desktop/SOAF/SOAF_Report.txt
+	echo " " >> /home/$USER/Desktop/SOAF/SOAF_Report.txt
+	sqlite3 -column -header soaf.db "SELECT * FROM keyword_search;" >> /home/$USER/Desktop/SOAF/SOAF_Report.txt
+
+else
+
+	echo "$@ is not a valid path."
+	exit 1
+
+fi
+
+
+}
+
+#directory_exist $@
+
+
+#Validate that SQLite3 is installed.
+
+validate_sql() {
+
+if ! type "sqlite3" > /dev/null; then
+	read -p  "SQLite not installed. Would you like to install? (y or n): " ans1
+
+		if [ $ans1 = "y" ]; then
+
+			sudo apt-get update
+			sudo apt-get install sqlite3 libsqlite3-dev
+			sudo apt-get install sqlitebrowser
+
+			create_table
+			directory_exist $@
+			sqlitebrowser /home/$USER/Desktop/SOAF/soaf.db
+
+		elif [ $ans1 = "n" ]; then
+ 
+			exit 1
+
+		else
+
+			echo "Answer must be y or n. Try again."
+			exit 1
+
+		fi
+else
+
+	create_table
+	directory_exist $@
+	sqlitebrowser /home/$USER/Desktop/SOAF/soaf.db
+
+fi
+
+}
+
+validate_sql $@
+
+
